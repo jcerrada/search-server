@@ -19,6 +19,17 @@ RUN  curl -sS https://getcomposer.org/installer | php \
     && mv composer.phar /usr/bin/composer
 
 #
+# New Relic
+#
+RUN cd ~ \
+    && export NEWRELIC_VERSION="$(curl -sS https://download.newrelic.com/php_agent/release/ | sed -n 's/.*>\(.*linux-musl\).tar.gz<.*/\1/p')" \
+    && curl -sS "https://download.newrelic.com/php_agent/release/${NEWRELIC_VERSION}.tar.gz" | gzip -dc | tar xf - \
+    && cd "${NEWRELIC_VERSION}" \
+    && NR_INSTALL_SILENT=true ./newrelic-install install \
+    && cd .. \
+    && unset NEWRELIC_VERSION
+
+#
 # Apisearch installation
 #
 RUN mkdir /var/www/apisearch
