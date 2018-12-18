@@ -18,13 +18,14 @@ namespace Apisearch\Plugin\ELK\Domain\Event;
 use Apisearch\Plugin\Redis\Domain\RedisWrapper;
 use Apisearch\Server\Domain\Event\DomainEventWithRepositoryReference;
 use Apisearch\Server\Domain\Event\EventSubscriber;
+use Apisearch\Server\Domain\Event\ExceptionWasCached;
 use Apisearch\Server\Domain\Formatter\TimeFormatBuilder;
 use Monolog\Formatter\LogstashFormatter;
 use Monolog\Handler\RedisHandler;
 use Monolog\Logger;
 use Monolog\Processor\MemoryPeakUsageProcessor;
 use Monolog\Processor\MemoryUsageProcessor;
-use RedisException;
+use Exception;
 
 /**
  * Class DomainEventSubscriber.
@@ -117,7 +118,9 @@ class DomainEventSubscriber implements EventSubscriber
         );
 
         $formatter = new LogstashFormatter('apisearch');
-        $redisHandler->setFormatter($formatter);
+        $redisHandler
+            ->setFormatter($formatter)
+            ->setLevel(Logger::ERROR);
         $this->logger = new Logger('apisearch_to_logstash', [$redisHandler], [
             new MemoryUsageProcessor(),
             new MemoryPeakUsageProcessor(),
@@ -144,8 +147,10 @@ class DomainEventSubscriber implements EventSubscriber
         try {
             $this
                 ->getLogger()
-                ->info(
+                ->addRecord(
+                    $event instanceof ExceptionWasCached ? Logger::ERROR : Logger::INFO,
                     json_encode([
+                            'environment' => getenv('APP_ENV') ?g? 'prod',
                             'service' => $this->service,
                             'repository_reference' => $domainEventWithRepositoryReference
                                 ->getRepositoryReference()
@@ -153,7 +158,7 @@ class DomainEventSubscriber implements EventSubscriber
                             'time_cost' => $domainEventWithRepositoryReference->getTimeCost(),
                         ] + $reducedArray)
                 );
-        } catch (RedisException $exception) {
+        } catch (Exception $exception) {
             // Nothing to do.
         }
     }
