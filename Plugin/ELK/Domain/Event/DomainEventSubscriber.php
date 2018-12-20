@@ -150,7 +150,7 @@ class DomainEventSubscriber implements EventSubscriber
                 ->addRecord(
                     $event instanceof ExceptionWasCached ? Logger::ERROR : Logger::INFO,
                     json_encode([
-                            'environment' => getenv('APP_ENV') ?g? 'prod',
+                            'environment' => getenv('APP_ENV') ?? 'prod',
                             'service' => $this->service,
                             'repository_reference' => $domainEventWithRepositoryReference
                                 ->getRepositoryReference()
