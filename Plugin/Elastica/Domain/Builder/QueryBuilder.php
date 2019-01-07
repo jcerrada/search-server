@@ -732,6 +732,7 @@ class QueryBuilder
         $boolQuery->addMust($elasticaQuery);
         $newQuery->setQuery($boolQuery);
         $newQuery->setScoreMode($scoreStrategies->getScoreMode());
+        $newQuery->setBoostMode($scoreStrategies->getScoreMode());
 
         /*
          * @var ScoreStrategy
